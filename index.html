@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>漢字語 탐정단 — 격자 속 한국의 한자어 찾기</title>
+<meta name="description" content="한문 수업 활동 · 분야별 한자어 찾기 미션 10 — 격자 속 한국의 한자어를 찾는 인터랙티브 웹 게임">
+<style>
+:root{
+  --cream:#FFF9F2; --cream2:#FFF3E6;
+  --ink:#4B4358; --ink-soft:#7A7189;
+  --pink:#FFD6E4; --pink-d:#F49CBB;
+  --mint:#CBF3E2; --mint-d:#6FD0AC;
+  --lav:#E1DAFF; --lav-d:#A28BEA;
+  --sky:#D6ECFF; --sky-d:#6BB3E8;
+  --peach:#FFE2CC; --peach-d:#F6A870;
+  --yellow:#FFEFC2; --yellow-d:#E7B93F;
+  --card:#FFFFFF; --line:#F0E7DE;
+  --shadow:0 10px 26px rgba(120,100,140,.10), 0 2px 6px rgba(120,100,140,.06);
+  --shadow-sm:0 4px 12px rgba(120,100,140,.10);
+  --r:22px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic","Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 12% 8%, #FFEAF3 0%, transparent 42%),
+    radial-gradient(circle at 88% 4%, #E7F7FF 0%, transparent 40%),
+    radial-gradient(circle at 82% 92%, #EFE9FF 0%, transparent 44%),
+    radial-gradient(circle at 10% 88%, #E9FBF3 0%, transparent 40%),
+    var(--cream);
+  min-height:100vh;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(#E9DDD0 1px, transparent 1px);
+  background-size:22px 22px;opacity:.35;
+}
+#app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:18px 18px 60px}
+.hidden{display:none !important}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;gap:14px;padding:6px 4px 18px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand .mark{
+  width:52px;height:52px;border-radius:18px;flex:0 0 auto;
+  background:linear-gradient(145deg,#FFF0F6,#E7E0FF);
+  display:grid;place-items:center;font-size:26px;
+  box-shadow:var(--shadow-sm);border:2px solid #fff;
+}
+.brand h1{margin:0;font-size:22px;letter-spacing:-.4px;line-height:1.15}
+.brand h1 .han{font-weight:800}
+.brand p{margin:3px 0 0;font-size:12.5px;color:var(--ink-soft)}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.stat-pill{
+  display:flex;align-items:center;gap:6px;background:#fff;border:2px solid #fff;
+  border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;
+  box-shadow:var(--shadow-sm);white-space:nowrap
+}
+.stat-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--mint-d)}
+
+/* ---------- buttons ---------- */
+.btn{
+  font:inherit;font-size:13.5px;font-weight:700;color:var(--ink);
+  background:#fff;border:2px solid #fff;border-radius:999px;
+  padding:9px 16px;cursor:pointer;box-shadow:var(--shadow-sm);
+  display:inline-flex;align-items:center;gap:6px;transition:transform .12s ease, box-shadow .12s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn.primary{background:linear-gradient(135deg,#EC7FA6,#A472E0);color:#fff}
+.btn.mint{background:linear-gradient(135deg,#45BE9C,#43A6D6);color:#fff}
+.btn.ghost{background:rgba(255,255,255,.7)}
+.btn.small{padding:7px 12px;font-size:12.5px}
+.btn.icon{width:40px;height:40px;padding:0;justify-content:center;font-size:17px}
+
+/* ---------- map ---------- */
+.map-hero{
+  background:linear-gradient(150deg,#FFF6FA,#F2EEFF 55%,#EAF8FF);
+  border:2px solid #fff;border-radius:28px;padding:20px 22px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;
+}
+.map-hero h2{margin:0;font-size:19px}
+.map-hero p{margin:4px 0 0;font-size:13px;color:var(--ink-soft)}
+.map-hero .grow{flex:1 1 240px}
+.mini-progress{height:10px;border-radius:999px;background:#fff;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.06);margin-top:10px;max-width:320px}
+.mini-progress span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--pink-d),var(--lav-d));transition:width .4s ease}
+
+.cases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.case{
+  position:relative;background:var(--card);border:2px solid #fff;border-radius:var(--r);
+  padding:16px 15px 15px;cursor:pointer;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:8px;overflow:hidden;
+  transition:transform .16s ease, box-shadow .16s ease;
+}
+.case:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(120,100,140,.16)}
+.case::after{
+  content:"";position:absolute;inset:auto -30% -55% -30%;height:70%;border-radius:50%;
+  background:var(--tint);opacity:.55;pointer-events:none;
+}
+.case-top{display:flex;align-items:center;gap:8px;position:relative;z-index:1}
+.case-num{
+  width:38px;height:38px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto;
+  font-weight:800;font-size:15px;color:#fff;background:var(--accent);
+  box-shadow:0 4px 10px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.case-emoji{font-size:22px;margin-left:auto}
+.case h3{margin:2px 0 0;font-size:15.5px;line-height:1.3;position:relative;z-index:1}
+.case .sub{font-size:12.5px;color:var(--ink-soft);margin:0;position:relative;z-index:1}
+.case .meta{display:flex;align-items:center;justify-content:space-between;margin-top:auto;position:relative;z-index:1}
+.stars{font-size:11.5px;letter-spacing:1px;color:var(--yellow-d)}
+.case .cnt{font-size:11.5px;color:var(--ink-soft);font-weight:700}
+.case .bar{height:6px;border-radius:999px;background:#F4EFE9;overflow:hidden;position:relative;z-index:1}
+.case .bar span{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .4s}
+.stamp{
+  position:absolute;top:12px;right:-24px;transform:rotate(28deg);
+  background:#fff;color:var(--mint-d);border:2px solid var(--mint-d);
+  font-size:11px;font-weight:800;padding:2px 26px;letter-spacing:.5px;
+  box-shadow:0 3px 8px rgba(0,0,0,.05);z-index:2
+}
+.stamp.reveal{color:var(--peach-d);border-color:var(--peach-d)}
+.map-foot{margin-top:20px;font-size:12px;color:var(--ink-soft);text-align:center;line-height:1.7}
+
+/* ---------- mission ---------- */
+.mission-head{
+  background:#fff;border:2px solid #fff;border-radius:24px;padding:14px 18px;
+  box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;
+}
+.mission-head .case-num{width:44px;height:44px;font-size:16px;border-radius:15px}
+.mh-text{min-width:0}
+.mh-text h2{margin:0;font-size:18.5px;letter-spacing:-.3px}
+.mh-text p{margin:3px 0 0;font-size:12.5px;color:var(--ink-soft)}
+.mh-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chip-timer{
+  font-variant-numeric:tabular-nums;font-weight:800;font-size:15px;
+  background:var(--yellow);border-radius:999px;padding:8px 14px;color:#8A6A12;
+  box-shadow:inset 0 0 0 2px #fff
+}
+.chip-timer.urgent{background:#FFD7D7;color:#B03A3A;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.04)}}
+.chip-score{font-weight:800;font-size:13.5px;background:#F6F1FF;border-radius:999px;padding:8px 13px;color:#6A57A8}
+
+.mission-body{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:16px;align-items:start}
+.board-card{background:#fff;border:2px solid #fff;border-radius:26px;padding:14px;box-shadow:var(--shadow)}
+.board-wrap{position:relative;width:100%;max-width:560px;margin:0 auto}
+.board{
+  position:relative;display:grid;gap:4px;
+  background:linear-gradient(160deg,#FFFDFB,#FBF6FF);
+  border-radius:18px;padding:8px;
+}
+.overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:0}
+.cell{
+  position:relative;z-index:1;display:grid;place-items:center;
+  aspect-ratio:1/1;border-radius:12px;background:transparent;
+  font-size:clamp(16px,3.6vw,26px);font-weight:600;color:#3E3548;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+  box-shadow:inset 0 0 0 1.5px #F2ECE4;
+  transition:background .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.board.dragging .cell{cursor:crosshair}
+.cell.sel{background:rgba(255,233,150,.55);box-shadow:inset 0 0 0 2px #F1C948;transform:scale(.97)}
+.cell.sel.bad{background:#FFE0E0;box-shadow:inset 0 0 0 2px #F0A0A0}
+.cell.found{color:#3B2E4A;font-weight:700}
+.cell.flash{animation:flashCell 1.5s ease}
+@keyframes flashCell{
+  0%,100%{background:transparent;box-shadow:inset 0 0 0 1.5px #F2ECE4}
+  20%,60%{background:#FFF0B8;box-shadow:0 0 0 4px rgba(241,201,72,.55), inset 0 0 0 2px #F1C948;transform:scale(1.06)}
+  40%,80%{background:#FFE9A8;transform:scale(1)}
+}
+.board-hint{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 4px 2px;font-size:12px;color:var(--ink-soft)}
+.board-hint b{color:var(--ink)}
+
+.panel{display:flex;flex-direction:column;gap:12px;min-width:0}
+.pcard{background:#fff;border:2px solid #fff;border-radius:22px;padding:15px 16px;box-shadow:var(--shadow)}
+.pcard h4{margin:0 0 8px;font-size:13px;letter-spacing:.3px;color:var(--ink-soft);font-weight:800;display:flex;align-items:center;gap:6px}
+.rule-text{font-size:13px;line-height:1.65;margin:0}
+.dir-note{margin:8px 0 0;font-size:12px;color:var(--ink-soft);background:#FBF7FF;border-radius:10px;padding:7px 10px;display:inline-block}
+.clue-list{display:flex;flex-direction:column;gap:7px;max-height:min(46vh,430px);overflow:auto;padding-right:2px}
+.clue{
+  display:flex;gap:9px;align-items:flex-start;background:#FCFAF7;border-radius:14px;
+  padding:9px 11px;border:1.5px solid #F5EEE6;font-size:13px;line-height:1.45;
+  transition:background .2s, border-color .2s;
+}
+.clue .no{
+  flex:0 0 auto;min-width:20px;height:20px;padding:0 5px;border-radius:7px;background:#EFE9FF;color:#6A57A8;
+  font-size:11.5px;font-weight:800;display:grid;place-items:center;margin-top:1px
+}
+.clue .body{min-width:0;flex:1}
+.clue .q{color:var(--ink)}
+.clue .a{margin-top:3px;font-size:12.5px;color:var(--mint-d);font-weight:700;display:none}
+.clue.done{background:#F2FCF7;border-color:#D6F2E6}
+.clue.done .a{display:block}
+.clue.done .q{color:var(--ink-soft)}
+.clue.done .q .blank{color:var(--mint-d);font-weight:800}
+.clue .han{font-weight:800;color:#40355A}
+.clue.intruder{background:#FFF6F8;border-color:#FFDFE8}
+.clue.intruder .q{color:#B0577A}
+.blank{display:inline-block;min-width:1.6em;text-align:center;border-bottom:2px solid #E3D7C8;color:#B9AEC0}
+.clue.done .blank{border-bottom:0;color:var(--mint-d)}
+.clue .bonus{font-size:10.5px;font-weight:800;color:var(--peach-d);background:#FFF1E6;border-radius:999px;padding:1px 7px;margin-left:5px}
+
+.challenge{background:linear-gradient(160deg,#FFF9F1,#F7F2FF);border:2px dashed #EDDFF7;border-radius:20px;padding:14px 15px}
+.challenge h4{color:#8A6BB0}
+.challenge .q{font-size:13.5px;line-height:1.55;margin:0 0 10px;font-weight:700}
+.challenge .row{display:flex;gap:8px;flex-wrap:wrap}
+.challenge input[type=text]{
+  flex:1 1 150px;min-width:0;font:inherit;font-size:14px;padding:9px 12px;border-radius:12px;
+  border:2px solid #EADFF3;background:#fff;color:var(--ink);outline:none
+}
+.challenge input[type=text]:focus{border-color:var(--lav-d);box-shadow:0 0 0 3px #EDE6FF}
+.challenge .verdict{font-size:12.5px;margin:8px 0 0;font-weight:700}
+.challenge .verdict.ok{color:var(--mint-d)}
+.challenge .verdict.no{color:#D4788F}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  font:inherit;font-size:13px;padding:8px 13px;border-radius:999px;background:#fff;
+  border:2px solid #EFE7F7;cursor:pointer;font-weight:700;color:var(--ink);transition:all .15s
+}
+.chip:hover{border-color:var(--lav-d)}
+.chip.on{background:#EDE6FF;border-color:var(--lav-d);color:#5A46A0}
+.chip.right{background:#E7FAF1;border-color:var(--mint-d);color:#2E8A68}
+.chip.wrong{background:#FFEFF2;border-color:#F3B6C6;color:#B0577A}
+.chip.dragging{transform:scale(.96)}
+.group-box{margin-top:8px;border-radius:14px;background:#fff;border:2px solid #EFE7F7;padding:8px}
+.group-box h5{margin:0 0 6px;font-size:12px;color:var(--ink-soft)}
+.group-box .drop{min-height:38px;display:flex;flex-wrap:wrap;gap:6px;border-radius:10px;border:2px dashed #EADFF3;padding:6px}
+.ghost-text{font-size:12px;color:#B9AEC0}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.board-card .actions{justify-content:center}
+
+/* ---------- modal ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(70,55,90,.38);backdrop-filter:blur(4px);
+  display:grid;place-items:center;padding:18px;z-index:50
+}
+.modal{
+  background:#fff;border-radius:26px;padding:22px;max-width:560px;width:100%;
+  box-shadow:0 30px 70px rgba(60,45,80,.28);max-height:88vh;overflow:auto;
+  animation:pop .22s ease
+}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{margin:0 0 10px;font-size:19px;display:flex;align-items:center;gap:8px}
+.modal .m-body{font-size:13.5px;line-height:1.75}
+.modal .m-body b{color:#5A46A0}
+.modal .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.rules-step{display:flex;gap:11px;background:#FBF8FF;border-radius:16px;padding:11px 13px;margin-bottom:9px}
+.rules-step .n{width:26px;height:26px;border-radius:9px;background:var(--lav);display:grid;place-items:center;font-weight:800;font-size:12.5px;flex:0 0 auto;color:#5A46A0}
+.rules-step h5{margin:0 0 3px;font-size:13.5px}
+.rules-step p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.6}
+.dir-map{display:grid;grid-template-columns:repeat(3,34px);gap:5px;justify-content:center;margin:6px 0 2px}
+.dir-map span{width:34px;height:34px;border-radius:10px;background:#F4EFFF;display:grid;place-items:center;font-size:15px}
+.dir-map span.bold{background:#E4D9FF;font-weight:800;box-shadow:inset 0 0 0 2px #B9A4F2}
+.score-rule{font-size:12.5px;color:var(--ink-soft);line-height:1.8}
+
+/* completion */
+.finish{text-align:center}
+.finish .big{font-size:52px;line-height:1}
+.finish h3{justify-content:center;font-size:22px;margin:10px 0 4px}
+.finish .hanja-big{font-size:30px;font-weight:800;letter-spacing:6px;color:#5A46A0;margin:6px 0}
+.finish .stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:12px 0 4px}
+.finish .stat{background:#F8F4FF;border-radius:14px;padding:9px 14px;font-size:12.5px;font-weight:700}
+.finish .stat b{display:block;font-size:18px;color:#5A46A0}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.confetti i{position:absolute;top:-8vh;font-size:18px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(420deg);opacity:.9}}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);z-index:40;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,520px)}
+.toast{
+  background:#40355A;color:#fff;border-radius:16px;padding:11px 16px;font-size:13px;font-weight:700;
+  box-shadow:0 14px 30px rgba(50,35,80,.28);opacity:0;transform:translateY(12px);
+  transition:opacity .22s, transform .22s;text-align:center;max-width:100%
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:linear-gradient(135deg,#3FBF95,#2E9E8E)}
+.toast.warn{background:linear-gradient(135deg,#F0A0A0,#D4788F)}
+.toast.info{background:linear-gradient(135deg,#8E7BE0,#6A57A8)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1040px){
+  .cases{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .mission-body{grid-template-columns:minmax(0,1fr)}
+  .board-wrap{max-width:520px}
+  .clue-list{max-height:none;overflow:visible}
+}
+@media (max-width:680px){
+  #app{padding:12px 12px 40px}
+  .brand h1{font-size:18px}
+  .brand p{font-size:11.5px}
+  .brand .mark{width:42px;height:42px;font-size:21px;border-radius:14px}
+  .topbar{flex-wrap:wrap;gap:10px}
+  .top-actions{width:100%;margin-left:0}
+  .stat-pill{font-size:12px;padding:7px 12px}
+  .map-hero{padding:16px}
+  .cases{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .case{padding:13px 12px}
+  .case h3{font-size:14px}
+  .case .sub{font-size:11.5px}
+  .mission-head{padding:12px 13px;gap:10px}
+  .mh-text h2{font-size:16px}
+  .mh-right{width:100%;margin-left:0}
+  .board-card{padding:9px;border-radius:20px}
+  .board{gap:3px;padding:6px}
+  .cell{border-radius:9px}
+  .pcard{padding:13px}
+  .panel{gap:10px}
+  .btn{font-size:13px;padding:9px 13px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">🔍</div>
+      <div>
+        <h1><span class="han">漢字語</span> 탐정단</h1>
+        <p>격자 속 한국의 한자어 찾기 · 미션 10</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="stat-pill"><span class="dot"></span><span id="hdr-progress">0 / 10 사건 종결</span></div>
+      <button class="btn icon ghost" id="btn-sound" title="소리 켜기/끄기">🔔</button>
+      <button class="btn ghost" id="btn-rules">📜 수사 규칙</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="screen-map" class="screen">
+      <div class="map-hero">
+        <div class="grow">
+          <h2>사건 지도 🗺️</h2>
+          <p>분야별 한자어 10개 사건 — 수업 시간에 맞춰 골라 수사하세요.</p>
+          <div class="mini-progress"><span id="map-bar" style="width:0%"></span></div>
+        </div>
+        <div class="stat-pill">⭐ <span id="map-score">0</span>점</div>
+        <button class="btn mint" id="btn-first">▶ 이어서 수사하기</button>
+      </div>
+      <div class="cases" id="cases"></div>
+      <p class="map-foot">한자어 1개 = 1점 (미션 08은 2점) · 도전 문제 정답 = 3점 · 진행 상황은 이 기기에 저장됩니다.</p>
+    </section>
+
+    <section id="screen-mission" class="screen hidden">
+      <div class="mission-head">
+        <button class="btn icon ghost" id="btn-back" title="사건 지도로">←</button>
+        <div class="case-num" id="m-num">01</div>
+        <div class="mh-text">
+          <h2 id="m-title">디지털 사건파일</h2>
+          <p id="m-sub">초성 수사 보고서 · ★★☆☆</p>
+        </div>
+        <div class="mh-right">
+          <div class="chip-timer hidden" id="m-timer">03:00</div>
+          <div class="chip-score">🔎 <span id="m-found">0</span> / <span id="m-total">0</span></div>
+          <button class="btn small ghost" id="btn-hint">💡 힌트</button>
+          <button class="btn small ghost" id="btn-reveal">👁 정답 보기</button>
+          <button class="btn small ghost" id="btn-reset">↺ 초기화</button>
+        </div>
+      </div>
+
+      <div class="mission-body">
+        <div class="board-card">
+          <div class="board-wrap">
+            <div class="board" id="board"></div>
+            <svg class="overlay" id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="board-hint">
+            <span>마우스로 <b>끌어서</b> / 손가락으로 <b>쓸어서</b> 한자어를 찾아요</span>
+            <span id="m-dir"></span>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="btn-start" style="display:none">⏱ 3분 시작</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="pcard">
+            <h4>📖 미션 규칙</h4>
+            <p class="rule-text" id="m-rule"></p>
+            <span class="dir-note" id="m-dirnote"></span>
+          </div>
+          <div class="pcard">
+            <h4 id="clue-head">🔎 수사 단서</h4>
+            <div class="clue-list" id="clues"></div>
+          </div>
+          <div class="challenge" id="challenge"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal" id="modal"></div>
+</div>
+<div id="toast"></div>
+<script id="data" type="application/json">{"missions":[{"num":1,"numLabel":"01","title":"디지털 사건파일","subtitle":"초성 수사 보고서","difficulty":"★★☆☆","emoji":"💻","rule":"수사 보고서의 (초성) 빈칸에 들어갈 한자어를 추리한 뒤, 격자에서 한자로 찾아 표시하세요.","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["父","分","國","逮","手","女","五","號"],["男","林","被","力","捕","山","暗","來"],["通","信","追","害","十","語","弟","話"],["理","校","九","夏","一","學","平","知"],["流","出","害","保","火","檢","公","善"],["網","報","善","安","七","網","索","時"],["情","追","跡","高","來","天","風","安"],["九","家","認","證","家","黑","電","秋"]],"words":{"情報":{"hanja":"情報","reading":"정보","meaning":"","cells":[[6,0],[5,1]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"暗號":{"hanja":"暗號","reading":"암호","meaning":"","cells":[[1,6],[0,7]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"認證":{"hanja":"認證","reading":"인증","meaning":"","cells":[[7,2],[7,3]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"保安":{"hanja":"保安","reading":"보안","meaning":"","cells":[[4,3],[5,3]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"流出":{"hanja":"流出","reading":"유출","meaning":"","cells":[[4,0],[4,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"檢索":{"hanja":"檢索","reading":"검색","meaning":"","cells":[[4,5],[5,6]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"通信":{"hanja":"通信","reading":"통신","meaning":"","cells":[[2,0],[2,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"被害":{"hanja":"被害","reading":"피해","meaning":"","cells":[[1,2],[2,3]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"追跡":{"hanja":"追跡","reading":"추적","meaning":"","cells":[[6,1],[6,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"逮捕":{"hanja":"逮捕","reading":"체포","meaning":"","cells":[[0,3],[1,4]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"해커가 고객의 개인 (ㅈㅂ)를 빼냈다.","words":["情報"],"type":"chosung"},{"no":"2","hint":"파일에 (ㅇㅎ)가 걸려 열리지 않았다.","words":["暗號"],"type":"chosung"},{"no":"3","hint":"로그인할 때 휴대폰 (ㅇㅈ)을 거친다.","words":["認證"],"type":"chosung"},{"no":"4","hint":"회사 (ㅂㅇ) 시스템에 구멍이 뚫렸다.","words":["保安"],"type":"chosung"},{"no":"5","hint":"고객 명단이 외부로 (ㅇㅊ)되었다.","words":["流出"],"type":"chosung"},{"no":"6","hint":"수사관이 접속 기록을 (ㄱㅅ)했다.","words":["檢索"],"type":"chosung"},{"no":"7","hint":"범행 당시의 (ㅌㅅ) 내역을 확보했다.","words":["通信"],"type":"chosung"},{"no":"8","hint":"(ㅍㅎ) 금액이 3억 원에 이른다.","words":["被害"],"type":"chosung"},{"no":"9","hint":"IP 주소를 (ㅊㅈ)해 위치를 알아냈다.","words":["追跡"],"type":"chosung"},{"no":"10","hint":"마침내 범인을 (ㅊㅍ)했다.","words":["逮捕"],"type":"chosung"}],"challenge":{"ui":"input","accept":["流入","유입"],"show":"流入","question":"수사 마무리: '流出'의 반대말을 한자로 쓰면? (힌트: 들 입)","reveal":"流入(유입) — 出(날 출) ↔ 入(들 입). 정보가 '들어옴'을 뜻합니다."},"hintType":"chosung","clueHead":"🔎 수사 보고서 · 초성 단서"},{"num":2,"numLabel":"02","title":"마음의 한자어 사전","subtitle":"반의어 짝꿍 찾기","difficulty":"★★★☆","emoji":"💗","rule":"왼쪽 단어 5개와, 그 반대 뜻을 가진 짝꿍 5개가 모두 격자에 숨어 있습니다. 짝꿍은 힌트 없이 스스로 떠올려 찾으세요!","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["十","田","林","知","入","春","孝","文"],["忠","安","信","世","八","客","年","學"],["不","雪","母","外","平","書","校","東"],["耳","民","風","心","石","內","主","去"],["分","秋","安","孝","田","先","工","北"],["客","樂","否","定","外","父","肯","定"],["主","觀","地","名","夏","內","向","年"],["悲","重","直","名","金","外","雪","雨"]],"words":{"樂觀":{"hanja":"樂觀","reading":"낙관","meaning":"앞일을 밝게 봄","cells":[[5,1],[6,1]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"悲觀":{"hanja":"悲觀","reading":"비관","meaning":"앞일을 어둡게 봄","cells":[[7,0],[6,1]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"肯定":{"hanja":"肯定","reading":"긍정","meaning":"그렇다고 인정함","cells":[[5,6],[5,7]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"否定":{"hanja":"否定","reading":"부정","meaning":"그렇지 않다고 함","cells":[[5,2],[5,3]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"外向":{"hanja":"外向","reading":"외향","meaning":"마음이 바깥으로 향함","cells":[[7,5],[6,6]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"內向":{"hanja":"內向","reading":"내향","meaning":"마음이 안으로 향함","cells":[[6,5],[6,6]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"安心":{"hanja":"安心","reading":"안심","meaning":"걱정 없이 마음을 놓음","cells":[[4,2],[3,3]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"不安":{"hanja":"不安","reading":"불안","meaning":"마음이 편하지 않음","cells":[[2,0],[1,1]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"主觀":{"hanja":"主觀","reading":"주관","meaning":"자기만의 관점","cells":[[6,0],[6,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"客觀":{"hanja":"客觀","reading":"객관","meaning":"제삼자의 관점","cells":[[5,0],[6,1]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"樂觀 낙관 (앞일을 밝게 봄) ↔ □□ 짝꿍은?","words":["樂觀"],"type":"pair","hanja":"樂觀","reading":"낙관","gloss":"앞일을 밝게 봄","pin":"悲觀"},{"no":"2","hint":"肯定 긍정 (그렇다고 인정함) ↔ □□ 짝꿍은?","words":["肯定"],"type":"pair","hanja":"肯定","reading":"긍정","gloss":"그렇다고 인정함","pin":"否定"},{"no":"3","hint":"外向 외향 (마음이 바깥으로 향함) ↔ □□ 짝꿍은?","words":["外向"],"type":"pair","hanja":"外向","reading":"외향","gloss":"마음이 바깥으로 향함","pin":"內向"},{"no":"4","hint":"安心 안심 (걱정 없이 마음을 놓음) ↔ □□ 짝꿍은?","words":["安心"],"type":"pair","hanja":"安心","reading":"안심","gloss":"걱정 없이 마음을 놓음","pin":"不安"},{"no":"5","hint":"主觀 주관 (자기만의 관점) ↔ □□ 짝꿍은?","words":["主觀"],"type":"pair","hanja":"主觀","reading":"주관","gloss":"자기만의 관점","pin":"客觀"}],"challenge":{"ui":"input","accept":["觀","관","볼관"],"show":"觀(볼 관)","question":"세 쌍에 공통으로 쓰인 한자 '觀'의 훈과 음은? ________","reveal":"觀(볼 관) — 樂觀·悲觀·主觀·客觀 모두 '어떻게 바라보는가'를 나타냅니다."},"hintType":"pair","clueHead":"🔎 반의어 짝꿍 (10개)"},{"num":3,"numLabel":"03","title":"한자어로 읽는 법정","subtitle":"침입자를 찾아라","difficulty":"★★★☆","emoji":"⚖️","rule":"목록의 법률 한자어 10개 중 9개만 격자에 있습니다. 끝까지 찾아도 없는 '침입자' 1개를 밝혀내세요.","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["自","先","東","直","事","子","出","六"],["原","告","小","檢","知","理","事","去"],["答","中","理","七","雨","一","學","子"],["禮","裁","判","土","校","小","二","直"],["時","平","西","決","文","校","二","千"],["林","主","秋","目","證","告","東","三"],["山","憲","學","院","據","秋","工","辯"],["夏","長","法","時","忠","被","告","護"]],"words":{"法院":{"hanja":"法院","reading":"법원","meaning":"재판을 하는 국가 기관","cells":[[7,2],[6,3]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"判決":{"hanja":"判決","reading":"판결","meaning":"재판의 결론을 내림","cells":[[3,2],[4,3]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"證據":{"hanja":"證據","reading":"증거","meaning":"사실을 증명하는 근거","cells":[[5,4],[6,4]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"原告":{"hanja":"原告","reading":"원고","meaning":"소송을 건 사람","cells":[[1,0],[1,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"被告":{"hanja":"被告","reading":"피고","meaning":"소송을 당한 사람","cells":[[7,5],[7,6]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"辯護":{"hanja":"辯護","reading":"변호","meaning":"남을 위해 변론하여 도움","cells":[[6,7],[7,7]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"檢事":{"hanja":"檢事","reading":"검사","meaning":"범죄를 수사하고 기소하는 사람","cells":[[1,3],[0,4]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"裁判":{"hanja":"裁判","reading":"재판","meaning":"옳고 그름을 판단함","cells":[[3,1],[3,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"憲法":{"hanja":"憲法","reading":"헌법","meaning":"국가 최고의 법","cells":[[6,1],[7,2]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"陪審":{"hanja":"陪審","reading":"배심","meaning":"격자에 없음 = 침입자!","cells":[],"dir":"","reverse":false,"bonus":false,"placements":0,"ambiguity":0}},"cards":[{"no":"1","hint":"法院 법원","words":["法院"],"type":"word","hanja":"法院","reading":"법원"},{"no":"2","hint":"判決 판결","words":["判決"],"type":"word","hanja":"判決","reading":"판결"},{"no":"3","hint":"證據 증거","words":["證據"],"type":"word","hanja":"證據","reading":"증거"},{"no":"4","hint":"原告 원고","words":["原告"],"type":"word","hanja":"原告","reading":"원고"},{"no":"5","hint":"被告 피고","words":["被告"],"type":"word","hanja":"被告","reading":"피고"},{"no":"6","hint":"辯護 변호","words":["辯護"],"type":"word","hanja":"辯護","reading":"변호"},{"no":"7","hint":"陪審 배심","words":["陪審"],"type":"word","hanja":"陪審","reading":"배심","intruder":true,"bonus":true},{"no":"8","hint":"檢事 검사","words":["檢事"],"type":"word","hanja":"檢事","reading":"검사"},{"no":"9","hint":"裁判 재판","words":["裁判"],"type":"word","hanja":"裁判","reading":"재판"},{"no":"10","hint":"憲法 헌법","words":["憲法"],"type":"word","hanja":"憲法","reading":"헌법"}],"challenge":{"ui":"intruder","answerHanja":"陪審","question":"침입자 한자어는? □□ (보너스: 原告와 被告에 공통으로 쓰인 한자는?)","reveal":"침입자: 陪審(배심) — 격자에 없습니다. 보너스: 告(알릴 고)"},"hintType":"word","clueHead":"🔎 찾을 한자어 (10개 중 9개가 격자에)"},{"num":4,"numLabel":"04","title":"병원에서 만나는 한자어","subtitle":"훈음 암호 해독","difficulty":"★★★☆","emoji":"🏥","rule":"힌트는 한자의 '훈(뜻)과 음'뿐입니다. 훈음을 한자로 바꾸어 격자에서 찾고, 한자어를 소리 내어 읽어 보세요.","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["三","人","禮","治","自","界","白","北"],["忠","六","診","療","父","患","術","出"],["美","血","壓","二","兄","手","者","十"],["處","月","信","風","開","世","美","安"],["症","方","義","天","八","檢","査","白"],["免","狀","藥","私","直","心","川","療"],["疫","風","局","學","重","由","草","弟"],["父","春","下","四","孝","安","五","三"]],"words":{"診療":{"hanja":"診療","reading":"진료","meaning":"진찰할 진 + 병 고칠 료","cells":[[1,2],[1,3]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"手術":{"hanja":"手術","reading":"수술","meaning":"손 수 + 재주 술","cells":[[2,5],[1,6]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"處方":{"hanja":"處方","reading":"처방","meaning":"곳 처 + 모 방","cells":[[3,0],[4,1]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"症狀":{"hanja":"症狀","reading":"증상","meaning":"증세 증 + 형상 상","cells":[[4,0],[5,1]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"患者":{"hanja":"患者","reading":"환자","meaning":"근심 환 + 놈 자","cells":[[1,5],[2,6]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"治療":{"hanja":"治療","reading":"치료","meaning":"다스릴 치 + 병 고칠 료","cells":[[0,3],[1,3]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"藥局":{"hanja":"藥局","reading":"약국","meaning":"약 약 + 판 국","cells":[[5,2],[6,2]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"血壓":{"hanja":"血壓","reading":"혈압","meaning":"피 혈 + 누를 압","cells":[[2,1],[2,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"免疫":{"hanja":"免疫","reading":"면역","meaning":"면할 면 + 전염병 역","cells":[[5,0],[6,0]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"檢査":{"hanja":"檢査","reading":"검사","meaning":"검사할 검 + 조사할 사","cells":[[4,5],[4,6]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"진찰할 진 + 병 고칠 료","words":["診療"],"type":"hunum"},{"no":"2","hint":"손 수 + 재주 술","words":["手術"],"type":"hunum"},{"no":"3","hint":"곳 처 + 모 방","words":["處方"],"type":"hunum"},{"no":"4","hint":"증세 증 + 형상 상","words":["症狀"],"type":"hunum"},{"no":"5","hint":"근심 환 + 놈 자","words":["患者"],"type":"hunum"},{"no":"6","hint":"다스릴 치 + 병 고칠 료","words":["治療"],"type":"hunum"},{"no":"7","hint":"약 약 + 판 국","words":["藥局"],"type":"hunum"},{"no":"8","hint":"피 혈 + 누를 압","words":["血壓"],"type":"hunum"},{"no":"9","hint":"면할 면 + 전염병 역","words":["免疫"],"type":"hunum"},{"no":"10","hint":"검사할 검 + 조사할 사","words":["檢査"],"type":"hunum"}],"challenge":{"ui":"input","accept":["療","료","병고칠료"],"show":"療(병 고칠 료)","question":"두 번 등장하는 한자는? 훈음과 함께 쓰세요. ________","reveal":"療(병 고칠 료) — 診療(진료)와 治療(치료)에 함께 쓰였습니다."},"hintType":"hunum","clueHead":"🔎 훈음 암호 (훈 + 음)"},{"num":5,"numLabel":"05","title":"도시를 만드는 한자어","subtitle":"숨은 사자성어","difficulty":"★★★☆","emoji":"🏙️","rule":"한자어를 모두 지운 뒤 남은 한자 8개를 윗줄부터 → 방향으로 읽으면, 살기 좋은 도시를 뜻하는 사자성어 2개가 나타납니다.","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":6,"cols":6,"grid":[["市","民","橫","斷","步","道"],["再","國","都","市","計","劃"],["開","公","共","施","設","泰"],["發","橋","民","場","燈","公"],["住","梁","廣","號","安","園"],["安","宅","信","居","樂","業"]],"words":{"市民":{"hanja":"市民","reading":"시민","meaning":"도시에 사는 사람","cells":[[0,0],[0,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"公園":{"hanja":"公園","reading":"공원","meaning":"여럿이 쉬는 동산","cells":[[3,5],[4,5]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"再開發":{"hanja":"再開發","reading":"재개발","meaning":"낡은 지역을 새로 개발함","cells":[[1,0],[2,0],[3,0]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"橋梁":{"hanja":"橋梁","reading":"교량","meaning":"다리","cells":[[3,1],[4,1]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"公共施設":{"hanja":"公共施設","reading":"공공시설","meaning":"모두가 함께 쓰는 시설","cells":[[2,1],[2,2],[2,3],[2,4]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"都市計劃":{"hanja":"都市計劃","reading":"도시계획","meaning":"도시의 발전 방향을 세운 계획","cells":[[1,2],[1,3],[1,4],[1,5]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"信號燈":{"hanja":"信號燈","reading":"신호등","meaning":"교통 신호를 알리는 등","cells":[[5,2],[4,3],[3,4]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"廣場":{"hanja":"廣場","reading":"광장","meaning":"넓은 빈 터","cells":[[4,2],[3,3]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"橫斷步道":{"hanja":"橫斷步道","reading":"횡단보도","meaning":"사람이 길을 건너는 곳","cells":[[0,2],[0,3],[0,4],[0,5]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"住宅":{"hanja":"住宅","reading":"주택","meaning":"사람이 사는 집","cells":[[4,0],[5,1]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"시민","words":["市民"],"type":"reading"},{"no":"2","hint":"공원","words":["公園"],"type":"reading"},{"no":"3","hint":"재개발","words":["再開發"],"type":"reading"},{"no":"4","hint":"교량","words":["橋梁"],"type":"reading"},{"no":"5","hint":"공공시설","words":["公共施設"],"type":"reading"},{"no":"6","hint":"도시계획","words":["都市計劃"],"type":"reading"},{"no":"7","hint":"신호등","words":["信號燈"],"type":"reading"},{"no":"8","hint":"광장","words":["廣場"],"type":"reading"},{"no":"9","hint":"횡단보도","words":["橫斷步道"],"type":"reading"},{"no":"10","hint":"주택","words":["住宅"],"type":"reading"}],"challenge":{"ui":"idiom","items":[{"accept":["國泰民安","국태민안"],"show":"國泰民安"},{"accept":["安居樂業","안거낙업"],"show":"安居樂業"}],"question":"숨은 사자성어 ① □□□□ ② □□□□","reveal":"① 國泰民安(국태민안): 나라가 태평하고 백성이 편안함 ② 安居樂業(안거낙업): 편안히 살며 즐겁게 일함"},"hintType":"reading","clueHead":"🔎 찾을 한자어 · 음만 공개"},{"num":6,"numLabel":"06","title":"소비자의 경제수첩","subtitle":"뉴스 헤드라인 완성","difficulty":"★★☆☆","emoji":"💰","rule":"경제 뉴스 헤드라인의 [ ] 속 단어를 한자로 찾으세요. 격자에는 헤드라인에 없는 '10번째 단어'도 숨어 있습니다!","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["語","先","三","日","投","心","時","支"],["火","春","收","五","資","四","二","出"],["火","景","耳","入","石","弟","字","名"],["一","名","氣","先","年","平","天","全"],["物","開","平","消","主","書","文","天"],["價","貯","蓄","字","費","市","百","兄"],["名","利","百","行","花","場","直","六"],["金","雪","先","稅","金","黑","校","入"]],"words":{"物價":{"hanja":"物價","reading":"물가","meaning":"","cells":[[4,0],[5,0]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"消費":{"hanja":"消費","reading":"소비","meaning":"","cells":[[4,3],[5,4]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"投資":{"hanja":"投資","reading":"투자","meaning":"","cells":[[0,4],[1,4]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"貯蓄":{"hanja":"貯蓄","reading":"저축","meaning":"","cells":[[5,1],[5,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"稅金":{"hanja":"稅金","reading":"세금","meaning":"","cells":[[7,3],[7,4]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"收入":{"hanja":"收入","reading":"수입","meaning":"","cells":[[1,2],[2,3]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"支出":{"hanja":"支出","reading":"지출","meaning":"","cells":[[0,7],[1,7]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"市場":{"hanja":"市場","reading":"시장","meaning":"","cells":[[5,5],[6,5]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"景氣":{"hanja":"景氣","reading":"경기","meaning":"","cells":[[2,1],[3,2]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"金利":{"hanja":"金利","reading":"금리","meaning":"★ 숨은 10번째","cells":[[7,0],[6,1]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"10번째 단어 · 한국은행, 기준 [  ] 동결","words":["金利"],"type":"headline"},{"no":"2","hint":"장바구니 [물가] 비상… 채소값 30%↑","words":["物價"],"type":"headline"},{"no":"3","hint":"연말 [소비] 심리 회복세","words":["消費"],"type":"headline"},{"no":"4","hint":"청년층 주식 [투자] 열풍","words":["投資"],"type":"headline"},{"no":"5","hint":"고금리에 [저축] 늘어난 가계","words":["貯蓄"],"type":"headline"},{"no":"6","hint":"내년부터 달라지는 [세금] 제도","words":["稅金"],"type":"headline"},{"no":"7","hint":"가계 [수입] 늘었지만 지출도 증가","words":["收入"],"type":"headline"},{"no":"8","hint":"교육비 [지출] 역대 최고","words":["支出"],"type":"headline"},{"no":"9","hint":"전통 [시장] 살리기 나선 지자체","words":["市場"],"type":"headline"},{"no":"10","hint":"[경기] 침체 우려 커져","words":["景氣"],"type":"headline"}],"challenge":{"ui":"input","accept":["金利","금리"],"show":"金利(금리)","question":"10번째 단어로 완성하세요: 「한국은행, 기준 [ ] 동결」","reveal":"金利(금리). 덤: 收入(거둘 수)↔輸入(보낼 수), 景氣(경치 경)↔競技(다툴 경)처럼 음이 같은 동음이의어에 주의!"},"hintType":"headline","clueHead":"🔎 오늘의 경제 뉴스 헤드라인"},{"num":7,"numLabel":"07","title":"환경과 생태","subtitle":"찾고 나서 분류하라","difficulty":"★★☆☆","emoji":"🌿","rule":"한자어 10개를 찾은 뒤, 환경 '문제'를 뜻하는 단어와 '해결'을 뜻하는 단어로 나누어 보세요. (힌트는 음만, 순서는 뒤섞임)","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["子","自","溫","去","信","去","耳","學"],["節","約","行","暖","保","信","廢","時"],["靑","再","洪","水","化","護","棄","思"],["七","活","女","淨","態","西","物","風"],["兄","用","手","砂","手","理","九","雨"],["孝","植","黃","化","行","讀","汚","字"],["語","樹","汚","生","世","女","染","赤"],["金","八","心","先","法","子","萬","名"]],"words":{"汚染":{"hanja":"汚染","reading":"오염","meaning":"▲ 문제","cells":[[5,6],[6,6]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"節約":{"hanja":"節約","reading":"절약","meaning":"● 해결","cells":[[1,0],[1,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"溫暖化":{"hanja":"溫暖化","reading":"온난화","meaning":"▲ 문제","cells":[[0,2],[1,3],[2,4]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"植樹":{"hanja":"植樹","reading":"식수","meaning":"● 해결","cells":[[5,1],[6,1]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"廢棄物":{"hanja":"廢棄物","reading":"폐기물","meaning":"▲ 문제","cells":[[1,6],[2,6],[3,6]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"保護":{"hanja":"保護","reading":"보호","meaning":"● 해결","cells":[[1,4],[2,5]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"黃砂":{"hanja":"黃砂","reading":"황사","meaning":"▲ 문제","cells":[[5,2],[4,3]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"再活用":{"hanja":"再活用","reading":"재활용","meaning":"● 해결","cells":[[2,1],[3,1],[4,1]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"洪水":{"hanja":"洪水","reading":"홍수","meaning":"▲ 문제","cells":[[2,2],[2,3]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"淨化":{"hanja":"淨化","reading":"정화","meaning":"● 해결","cells":[[3,3],[2,4]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"오염","words":["汚染"],"type":"reading"},{"no":"2","hint":"절약","words":["節約"],"type":"reading"},{"no":"3","hint":"온난화","words":["溫暖化"],"type":"reading"},{"no":"4","hint":"식수","words":["植樹"],"type":"reading"},{"no":"5","hint":"폐기물","words":["廢棄物"],"type":"reading"},{"no":"6","hint":"보호","words":["保護"],"type":"reading"},{"no":"7","hint":"황사","words":["黃砂"],"type":"reading"},{"no":"8","hint":"재활용","words":["再活用"],"type":"reading"},{"no":"9","hint":"홍수","words":["洪水"],"type":"reading"},{"no":"10","hint":"정화","words":["淨化"],"type":"reading"}],"challenge":{"ui":"classify","question":"분류하기: 찾은 10개를 환경 '문제' 5개와 '해결' 5개로 나누어 한자로 쓰세요.","reveal":"문제: 汚染·溫暖化·廢棄物·黃砂·洪水 / 해결: 節約·植樹·保護·再活用·淨化","groups":{"problem":["汚染","溫暖化","廢棄物","黃砂","洪水"],"solution":["節約","植樹","保護","再活用","淨化"]}},"hintType":"reading","clueHead":"🔎 찾을 한자어 · 음만 공개"},{"num":8,"numLabel":"08","title":"스포츠 경기장","subtitle":"3분 타임어택","difficulty":"★☆☆☆","emoji":"🏟️","rule":"제한 시간 3분! 한자어 1개 = 2점. 세 글자 보너스 단어 '運動場'을 찾으면 +3점. 가장 먼저 다 찾은 모둠 +2점!","dirNote":"방향: → ↓ ↘ (정방향 3방향)","allowDirs":["→","↓","↘"],"rows":8,"cols":8,"grid":[["九","反","則","校","記","錄","應","援"],["正","力","學","母","自","文","得","點"],["東","善","語","工","赤","法","家","父"],["競","白","私","全","試","平","正","文"],["日","技","一","自","平","優","決","長"],["讀","冬","信","三","弟","行","勝","理"],["審","判","天","選","手","言","火","界"],["美","母","由","門","運","動","場","校"]],"words":{"競技":{"hanja":"競技","reading":"경기","meaning":"기술을 겨룸","cells":[[3,0],[4,1]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"選手":{"hanja":"選手","reading":"선수","meaning":"경기에 나가는 사람","cells":[[6,3],[6,4]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"優勝":{"hanja":"優勝","reading":"우승","meaning":"경기에서 이겨 1등을 함","cells":[[4,5],[5,6]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"決勝":{"hanja":"決勝","reading":"결승","meaning":"마지막 승부를 겨룸","cells":[[4,6],[5,6]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"審判":{"hanja":"審判","reading":"심판","meaning":"규칙을 적용해 판정하는 사람","cells":[[6,0],[6,1]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"反則":{"hanja":"反則","reading":"반칙","meaning":"규칙을 어김","cells":[[0,1],[0,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"應援":{"hanja":"應援","reading":"응원","meaning":"힘을 북돋아 줌","cells":[[0,6],[0,7]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"記錄":{"hanja":"記錄","reading":"기록","meaning":"성적을 적어 남김","cells":[[0,4],[0,5]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"得點":{"hanja":"得點","reading":"득점","meaning":"점수를 얻음","cells":[[1,6],[1,7]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"運動場":{"hanja":"運動場","reading":"운동장","meaning":"★ 보너스","cells":[[7,4],[7,5],[7,6]],"dir":"→","reverse":false,"bonus":true,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"競技 경기","words":["競技"],"type":"word","hanja":"競技","reading":"경기"},{"no":"2","hint":"選手 선수","words":["選手"],"type":"word","hanja":"選手","reading":"선수"},{"no":"3","hint":"優勝 우승","words":["優勝"],"type":"word","hanja":"優勝","reading":"우승"},{"no":"4","hint":"決勝 결승","words":["決勝"],"type":"word","hanja":"決勝","reading":"결승"},{"no":"5","hint":"審判 심판","words":["審判"],"type":"word","hanja":"審判","reading":"심판"},{"no":"6","hint":"反則 반칙","words":["反則"],"type":"word","hanja":"反則","reading":"반칙"},{"no":"7","hint":"應援 응원","words":["應援"],"type":"word","hanja":"應援","reading":"응원"},{"no":"8","hint":"記錄 기록","words":["記錄"],"type":"word","hanja":"記錄","reading":"기록"},{"no":"9","hint":"得點 득점","words":["得點"],"type":"word","hanja":"得點","reading":"득점"},{"no":"10","hint":"運動場 운동장 ★보너스","words":["運動場"],"type":"word","hanja":"運動場","reading":"운동장","bonus":true}],"challenge":{"ui":"input","accept":["23","23점"],"show":"23점","question":"모둠 점수: ______ 점 (최고점 18점 + 보너스 3점 + 1등 2점 = 23점)","reveal":"9개 × 2점 = 18점, 運動場 +3점, 1등 모둠 +2점. 優勝·決勝에 공통으로 쓰인 勝은 '이길 승'."},"hintType":"word","clueHead":"🔎 찾을 한자어 · 3분 안에"},{"num":9,"numLabel":"09","title":"고고학 발굴 현장","subtitle":"깨진 조각 복원","difficulty":"★★★☆","emoji":"🏺","rule":"한 글자씩 깨진(□) 한자어 조각을 복원해 격자에서 찾으세요. 모든 단어가 속한 '학문' 이름도 격자에 숨어 있어요!","dirNote":"방향: → ↓ ↘ ↗ (정방향 4방향)","allowDirs":["→","↓","↘","↗"],"rows":8,"cols":8,"grid":[["中","生","子","遺","忠","思","石","器"],["母","萬","年","地","名","耳","陵","跡"],["民","讀","自","土","草","王","遺","入"],["萬","四","物","自","器","讀","發","弟"],["校","遺","十","生","貝","話","化","掘"],["中","國","學","金","塚","字","石","先"],["子","古","木","足","中","忠","四","史"],["考","墳","家","安","目","白","入","上"]],"words":{"遺跡":{"hanja":"遺跡","reading":"유적","meaning":"옛사람이 남긴 자취","cells":[[2,6],[1,7]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"遺物":{"hanja":"遺物","reading":"유물","meaning":"옛사람이 남긴 물건","cells":[[4,1],[3,2]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"土器":{"hanja":"土器","reading":"토기","meaning":"흙으로 빚은 그릇","cells":[[2,3],[3,4]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"古墳":{"hanja":"古墳","reading":"고분","meaning":"옛 무덤","cells":[[6,1],[7,1]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"化石":{"hanja":"化石","reading":"화석","meaning":"돌처럼 굳은 옛 생물","cells":[[4,6],[5,6]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"先史":{"hanja":"先史","reading":"선사","meaning":"역사 기록 이전 시대","cells":[[5,7],[6,7]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"石器":{"hanja":"石器","reading":"석기","meaning":"돌로 만든 도구","cells":[[0,6],[0,7]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"王陵":{"hanja":"王陵","reading":"왕릉","meaning":"임금의 무덤","cells":[[2,5],[1,6]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"貝塚":{"hanja":"貝塚","reading":"패총","meaning":"조개무지","cells":[[4,4],[5,4]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"發掘":{"hanja":"發掘","reading":"발굴","meaning":"땅속을 파서 찾아냄","cells":[[3,6],[4,7]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"考古學":{"hanja":"考古學","reading":"고고학","meaning":"★ 보너스","cells":[[7,0],[6,1],[5,2]],"dir":"↗","reverse":false,"bonus":true,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"보너스 · 모든 단어가 속한 학문","words":["考古學"],"type":"fragment","bonus":true},{"no":"2","hint":"□跡 옛사람이 남긴 자취","words":["遺跡"],"type":"fragment"},{"no":"3","hint":"遺□ 옛사람이 남긴 물건","words":["遺物"],"type":"fragment"},{"no":"4","hint":"□器 흙으로 빚은 그릇","words":["土器"],"type":"fragment"},{"no":"5","hint":"古□ 옛 무덤","words":["古墳"],"type":"fragment"},{"no":"6","hint":"□石 돌처럼 굳은 옛 생물","words":["化石"],"type":"fragment"},{"no":"7","hint":"先□ 역사 기록 이전 시대","words":["先史"],"type":"fragment"},{"no":"8","hint":"□器 돌로 만든 도구","words":["石器"],"type":"fragment"},{"no":"9","hint":"王□ 임금의 무덤","words":["王陵"],"type":"fragment"},{"no":"10","hint":"□塚 조개무지","words":["貝塚"],"type":"fragment"},{"no":"11","hint":"發□ 땅속을 파서 찾아냄","words":["發掘"],"type":"fragment"}],"challenge":{"ui":"input","accept":["考古學","고고학"],"show":"考古學(고고학)","question":"모든 단어가 속한 학문(3글자)은? □□□ ※ 격자 속 보너스 단어","reveal":"考古學(고고학) — 상고할 고, 옛 고, 배울 학. 격자 속 보너스 단어입니다."},"hintType":"fragment","clueHead":"🔎 깨진 한자어 조각 (□ = 깨진 글자)"},{"num":10,"numLabel":"10","title":"보스 스테이지: 영화 제작","subtitle":"뜻풀이만으로 12개","difficulty":"★★★★","emoji":"🎬","rule":"최종 보스! 10×10 격자, 8방향(역방향 포함). 힌트는 뜻풀이뿐입니다. 영화 제작 한자어 12개를 모두 찾아 엔딩 크레디트를 완성하세요.","dirNote":"방향: 8방향 (가로·세로·대각선, 역방향 포함)","allowDirs":["→","↖","↗","↘","↙","↑","↓","←"],"rows":10,"cols":10,"grid":[["善","校","林","演","主","答","脚","花","場","音"],["讀","光","石","七","技","子","本","優","三","校"],["試","寫","會","樂","長","秋","俳","演","名","道"],["川","畵","八","雪","行","督","去","面","見","七"],["客","話","手","開","明","監","興","春","水","道"],["草","席","禮","足","私","行","川","先","由","地"],["火","男","千","冬","輯","小","千","雨","川","花"],["門","映","下","撮","美","編","山","時","上","私"],["萬","映","家","影","書","字","行","先","弟","主"],["弟","法","畵","金","美","幕","善","黑","客","觀"]],"words":{"映畵":{"hanja":"映畵","reading":"영화","meaning":"스크린에 비추어 보여 주는 이야기","cells":[[8,1],[9,2]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.002},"監督":{"hanja":"監督","reading":"감독","meaning":"촬영 현장을 지휘하는 총책임자","cells":[[4,5],[3,5]],"dir":"↑","reverse":true,"bonus":false,"placements":1,"ambiguity":0.001},"俳優":{"hanja":"俳優","reading":"배우","meaning":"배역을 맡아 연기하는 사람","cells":[[2,6],[1,7]],"dir":"↗","reverse":false,"bonus":false,"placements":1,"ambiguity":0.001},"主演":{"hanja":"主演","reading":"주연","meaning":"가장 중요한 역을 맡음","cells":[[0,4],[0,3]],"dir":"←","reverse":true,"bonus":false,"placements":1,"ambiguity":0.0},"脚本":{"hanja":"脚本","reading":"각본","meaning":"대사와 장면을 적은 글","cells":[[0,6],[1,6]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.001},"撮影":{"hanja":"撮影","reading":"촬영","meaning":"카메라로 장면을 찍음","cells":[[7,3],[8,3]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.002},"編輯":{"hanja":"編輯","reading":"편집","meaning":"찍은 장면을 잘라 이어 붙임","cells":[[7,5],[6,4]],"dir":"↖","reverse":true,"bonus":false,"placements":1,"ambiguity":0.002},"字幕":{"hanja":"字幕","reading":"자막","meaning":"화면 아래 나오는 번역 글자","cells":[[8,5],[9,5]],"dir":"↓","reverse":false,"bonus":false,"placements":1,"ambiguity":0.003},"觀客":{"hanja":"觀客","reading":"관객","meaning":"극장에서 영화를 보는 사람","cells":[[9,9],[9,8]],"dir":"←","reverse":true,"bonus":false,"placements":1,"ambiguity":0.004},"興行":{"hanja":"興行","reading":"흥행","meaning":"관객이 많이 들어 크게 성공함","cells":[[4,6],[5,5]],"dir":"↙","reverse":true,"bonus":false,"placements":1,"ambiguity":0.002},"演技":{"hanja":"演技","reading":"연기","meaning":"인물을 표현하는 몸짓과 말","cells":[[0,3],[1,4]],"dir":"↘","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0},"試寫會":{"hanja":"試寫會","reading":"시사회","meaning":"개봉 전에 미리 보여 주는 모임","cells":[[2,0],[2,1],[2,2]],"dir":"→","reverse":false,"bonus":false,"placements":1,"ambiguity":0.0}},"cards":[{"no":"1","hint":"스크린에 비추어 보여 주는 이야기","words":["映畵"],"type":"meaning"},{"no":"2","hint":"촬영 현장을 지휘하는 총책임자","words":["監督"],"type":"meaning"},{"no":"3","hint":"배역을 맡아 연기하는 사람","words":["俳優"],"type":"meaning"},{"no":"4","hint":"가장 중요한 역을 맡음","words":["主演"],"type":"meaning"},{"no":"5","hint":"대사와 장면을 적은 글","words":["脚本"],"type":"meaning"},{"no":"6","hint":"카메라로 장면을 찍음","words":["撮影"],"type":"meaning"},{"no":"7","hint":"찍은 장면을 잘라 이어 붙임","words":["編輯"],"type":"meaning"},{"no":"8","hint":"화면 아래 나오는 번역 글자","words":["字幕"],"type":"meaning"},{"no":"9","hint":"극장에서 영화를 보는 사람","words":["觀客"],"type":"meaning"},{"no":"10","hint":"관객이 많이 들어 크게 성공함","words":["興行"],"type":"meaning"},{"no":"11","hint":"인물을 표현하는 몸짓과 말","words":["演技"],"type":"meaning"},{"no":"12","hint":"개봉 전에 미리 보여 주는 모임","words":["試寫會"],"type":"meaning"}],"challenge":{"ui":"input","accept":["演","연","펼연"],"show":"演(펼 연)","question":"보스 클리어 조건: 12개 모두! 主演과 演技에 함께 쓰인 한자의 훈음은?","reveal":"演(펼 연) — 主演(주연)·演技(연기). '펼쳐 보이다'라는 뜻에서 연기·공연의 뜻이 나왔습니다."},"hintType":"meaning","clueHead":"🔎 뜻풀이 힌트 (엔딩 크레디트)"}],"colors":[["#F49CBB","#FFD6E4"],["#B79CEA","#E1DAFF"],["#6BB3E8","#D6ECFF"],["#6FD0AC","#CBF3E2"],["#F6A870","#FFE2CC"],["#E0B33F","#FFEFC2"],["#57BFD8","#D6F3F8"],["#E58FBF","#FFE0F0"],["#8FA6E8","#DFE6FF"],["#C77DD6","#F0DDF7"]]}</script>
+<script>
+(function(){
+"use strict";
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const MISSIONS = DATA.missions;
+const C = DATA.colors;
+const KEY = 'hanja-detective-v1';
+
+/* ---------- state ---------- */
+let state = {sound:true, missions:{}};
+try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function ms(n){ if(!state.missions[n]) state.missions[n] = {found:[], revealed:false, challenge:false, time:null}; return state.missions[n]; }
+function gridWords(m){ return Object.values(m.words).filter(w=>w.cells && w.cells.length); }
+function wordByCells(m, cells){
+  for(const w of gridWords(m)){
+    if(w.cells.length !== cells.length) continue;
+    let ok = true;
+    for(let i=0;i<cells.length;i++){ if(w.cells[i][0]!==cells[i][0]||w.cells[i][1]!==cells[i][1]){ ok=false; break; } }
+    if(ok) return w;
+  }
+  return null;
+}
+function cardFor(m, hanja){ return m.cards.find(c=>c.words.indexOf(hanja)>=0); }
+
+/* ---------- utils ---------- */
+const $ = s=>document.querySelector(s);
+const $$ = s=>Array.from(document.querySelectorAll(s));
+function h(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function toast(msg, kind, ms){
+  const box = $('#toast');
+  while(box.children.length >= 2) box.firstElementChild.remove();
+  const t = h('div','toast '+(kind||''), msg);
+  box.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); }, ms||2200);
+}
+let audioCtx=null;
+function tone(freq, dur, type, gain){
+  if(!state.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type||'sine'; o.frequency.value = freq;
+    g.gain.value = gain||0.05;
+    o.connect(g); g.connect(audioCtx.destination);
+    const t0 = audioCtx.currentTime;
+    g.gain.setValueAtTime(g.gain.value, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.start(t0); o.stop(t0+dur);
+  }catch(e){}
+}
+function sfxOk(){ tone(740,0.12,'sine',0.06); setTimeout(()=>tone(988,0.16,'sine',0.05),90); }
+function sfxNo(){ tone(220,0.16,'triangle',0.05); }
+function sfxWin(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.22,'sine',0.05), i*110)); }
+
+/* ---------- screens ---------- */
+function show(id){
+  $$('.screen').forEach(s=>s.classList.add('hidden'));
+  $('#'+id).classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ================= MAP ================= */
+function renderMap(){
+  const wrap = $('#cases'); wrap.innerHTML='';
+  let doneCount=0, score=0;
+  MISSIONS.forEach((m,i)=>{
+    const st = ms(m.num);
+    const words = gridWords(m);
+    const found = st.found.filter(x=>words.some(w=>w.hanja===x)).length;
+    const pct = Math.round(found/words.length*100);
+    const complete = found===words.length && !!st.challenge;
+    if(complete) doneCount++;
+    score += missionScore(m, st);
+    const card = h('div','case');
+    card.style.setProperty('--accent', C[i][0]);
+    card.style.setProperty('--tint', C[i][1]);
+    const top = h('div','case-top');
+    top.appendChild(h('div','case-num', m.numLabel));
+    top.appendChild(h('div','case-emoji', m.emoji));
+    card.appendChild(top);
+    card.appendChild(h('h3', null, m.title));
+    card.appendChild(h('p','sub', m.subtitle));
+    const meta = h('div','meta');
+    meta.appendChild(h('div','stars', m.difficulty));
+    meta.appendChild(h('div','cnt', found+'/'+words.length + (st.challenge?' · 도전✓':'')));
+    card.appendChild(meta);
+    const bar = h('div','bar'); const sp = h('span'); sp.style.width = pct+'%'; bar.appendChild(sp);
+    card.appendChild(bar);
+    if(complete){
+      card.appendChild(h('div','stamp'+(st.revealed?' reveal':''), st.revealed?'확인':'종결'));
+    }
+    card.addEventListener('click', ()=>openMission(m.num));
+    wrap.appendChild(card);
+  });
+  $('#hdr-progress').textContent = doneCount+' / '+MISSIONS.length+' 사건 종결';
+  $('#map-score').textContent = score;
+  $('#map-bar').style.width = Math.round(doneCount/MISSIONS.length*100)+'%';
+  const next = MISSIONS.find(m=>{
+    const st=ms(m.num), words=gridWords(m);
+    return st.found.length < words.length;
+  });
+  const bf = $('#btn-first');
+  bf.textContent = next ? (next.numLabel+'. '+next.title+' 이어서 수사') : '🎉 모든 사건 종결!';
+  bf.onclick = ()=> next ? openMission(next.num) : toast('모든 사건을 종결했어요! 대단해요 탐정님 🎉','ok',2600);
+}
+function missionScore(m, st){
+  const words = gridWords(m);
+  let s = 0;
+  st.found.forEach(x=>{ const w = m.words[x]; if(w && w.cells && w.cells.length) s += (m.num===8 ? (w.bonus?3:2) : 1); });
+  if(st.challenge) s += 3;
+  return s;
+}
+
+/* ================= MISSION ================= */
+let cur = null, drag = null, selCells = [], timer = null, timeLeft = 0, timerRunning = false;
+
+const DIR_CHO = {'→':'가로 오른쪽','↓':'세로 아래','↘':'대각선 오른쪽 아래','↗':'대각선 오른쪽 위','←':'가로 왼쪽','↑':'세로 위','↖':'대각선 왼쪽 위','↙':'대각선 왼쪽 아래'};
+
+function openMission(num){
+  cur = MISSIONS.find(m=>m.num===num);
+  show('screen-mission');
+  renderMission();
+}
+function renderMission(){
+  const m = cur, st = ms(m.num), words = gridWords(m);
+  $('#m-num').textContent = m.numLabel;
+  $('#m-num').style.background = C[MISSIONS.indexOf(m)][0];
+  $('#m-title').textContent = m.title;
+  $('#m-sub').textContent = m.subtitle+' · '+m.difficulty;
+  $('#m-found').textContent = st.found.filter(x=>words.some(w=>w.hanja===x)).length;
+  $('#m-total').textContent = words.length;
+  $('#m-dir').textContent = m.allowDirs.join(' ');
+  $('#m-rule').textContent = m.rule;
+  $('#m-dirnote').textContent = m.dirNote;
+  $('#clue-head').textContent = m.clueHead;
+  // board
+  const board = $('#board');
+  board.innerHTML='';
+  board.style.gridTemplateColumns = 'repeat('+m.cols+', minmax(0,1fr))';
+  board.style.aspectRatio = m.cols+' / '+m.rows;
+  board.classList.remove('dragging');
+  for(let r=0;r<m.rows;r++){
+    for(let c=0;c<m.cols;c++){
+      const cell = h('div','cell', m.grid[r][c]);
+      cell.dataset.r = r; cell.dataset.c = c;
+      board.appendChild(cell);
+    }
+  }
+  const ov = $('#overlay');
+  ov.setAttribute('viewBox','0 0 '+m.cols+' '+m.rows);
+  ov.setAttribute('preserveAspectRatio','none');
+  ov.innerHTML='';
+  // buttons
+  $('#btn-start').style.display = m.num===8 ? '' : 'none';
+  const startBtn = $('#btn-start');
+  if(m.num===8){
+    if(st.found.length===0 && st.time==null){ startBtn.textContent='⏱ 3분 시작'; startBtn.disabled=false; }
+    else if(timerRunning){ startBtn.textContent='⏱ '+fmt(timeLeft); startBtn.disabled=true; }
+    else { startBtn.textContent='⏱ 다시 시작'; startBtn.disabled=false; }
+    $('#m-timer').classList.remove('hidden');
+    $('#m-timer').textContent = fmt(st.time!=null?st.time:180);
+    $('#m-timer').classList.toggle('urgent', st.time!=null && st.time<=30);
+  } else {
+    $('#m-timer').classList.add('hidden');
+  }
+  drawFound();
+  renderClues();
+  renderChallenge();
+  bindBoard();
+  setupTimer();
+}
+function fmt(s){ s=Math.max(0,s); const mm=String(Math.floor(s/60)).padStart(2,'0'), ss=String(s%60).padStart(2,'0'); return mm+':'+ss; }
+
+function drawFound(){
+  const m = cur, st = ms(m.num), ov = $('#overlay');
+  ov.innerHTML='';
+  const NS='http://www.w3.org/2000/svg';
+  gridWords(m).forEach(w=>{
+    const done = st.found.indexOf(w.hanja)>=0;
+    const cells = w.cells.map(([r,c])=>document.querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]'));
+    if(done) cells.forEach(el=>el && el.classList.add('found'));
+    if(!done) return;
+    const a = w.cells[0], b = w.cells[w.cells.length-1];
+    const line = document.createElementNS(NS,'line');
+    line.setAttribute('x1', a[1]+0.5); line.setAttribute('y1', a[0]+0.5);
+    line.setAttribute('x2', b[1]+0.5); line.setAttribute('y2', b[0]+0.5);
+    const col = C[MISSIONS.indexOf(m)][1] || '#FFD6E4';
+    line.setAttribute('stroke', w.bonus ? '#FFD9A8' : pinkFor(wordIndex(m,w.hanja)));
+    line.setAttribute('stroke-width', 0.72);
+    line.setAttribute('stroke-linecap','round');
+    line.setAttribute('opacity', st.revealed ? '0.55' : '0.85');
+    ov.appendChild(line);
+  });
+}
+function pinkFor(i){ return ['#FFCFE0','#CDEBFF','#D8F5E5','#E6DBFF','#FFE5C7','#D9F0F7','#FFD9E9','#E4E8FF'][i%8]; }
+function wordIndex(m, hanja){ return gridWords(m).findIndex(w=>w.hanja===hanja); }
+
+function renderClues(){
+  const m = cur, st = ms(m.num), list = $('#clues');
+  list.innerHTML='';
+  m.cards.forEach((card, i)=>{
+    const done = card.words.length>0 && card.words.every(w=>st.found.indexOf(w)>=0);
+    const el = h('div','clue'+(done?' done':'')+(card.intruder?' intruder':''));
+    el.appendChild(h('div','no', card.no || String(i+1)));
+    const body = h('div','body');
+    const q = h('div','q');
+    if(card.intruder){
+      body.appendChild(q); q.innerHTML = '<span class="han">'+card.hanja+'</span> '+card.reading+' <span class="bonus">격자에 없을지도?</span>';
+    } else if(card.type==='pair'){
+      q.innerHTML = '<span class="han">'+card.hanja+'</span> '+card.reading+' <span style="color:#9C93AC">('+card.gloss+')</span> ↔ <span class="blank">□□</span>';
+      body.appendChild(q);
+    } else if(card.type==='fragment'){
+      const parts = card.hint.split(' ');
+      q.innerHTML = '<span class="han">'+parts[0]+'</span> <span style="color:#9C93AC">'+parts.slice(1).join(' ')+'</span>';
+      body.appendChild(q);
+    } else if(card.type==='headline'){
+      q.innerHTML = card.hint.replace(/\[([^\]]+)\]/, '<span class="blank">[&nbsp;&nbsp;&nbsp;]</span>');
+      body.appendChild(q);
+    } else if(card.type==='meaning'){
+      q.textContent = card.hint;
+      body.appendChild(q);
+    } else if(card.type==='word'){
+      q.innerHTML = '<span class="han">'+card.hanja+'</span> <span style="color:#9C93AC">'+card.reading+'</span>';
+      body.appendChild(q);
+    } else if(card.type==='reading'){
+      q.innerHTML = '<span class="blank">'+card.hint+'</span> <span style="color:#B9AEC0;font-size:11.5px">(음만 공개)</span>';
+      body.appendChild(q);
+    } else {
+      q.textContent = card.hint;
+      body.appendChild(q);
+    }
+    const a = h('div','a');
+    const w = card.words[0] ? m.words[card.words[0]] : null;
+    if(w){
+      a.textContent = w.hanja+' ('+w.reading+')'+(w.meaning?' · '+w.meaning:'')+(w.bonus?' ★':'');
+    }
+    body.appendChild(a);
+    el.appendChild(body);
+    list.appendChild(el);
+  });
+}
+
+/* ---------- challenge ---------- */
+function renderChallenge(){
+  const m = cur, st = ms(m.num), box = $('#challenge');
+  box.innerHTML='';
+  const ch = m.challenge;
+  box.appendChild(h('h4', null, '🕵️ 도전 문제'));
+  box.appendChild(h('p','q', ch.question));
+  const row = h('div','row');
+  const verdict = h('p','verdict');
+  if(ch.ui==='input'){
+    const inp = h('input'); inp.type='text'; inp.placeholder='한자 또는 음으로 입력';
+    inp.setAttribute('autocomplete','off'); inp.setAttribute('autocapitalize','off');
+    if(st.challenge){ inp.value = ch.show || ''; inp.disabled = true; }
+    const btn = h('button','btn primary small','확인');
+    const check = ()=>{
+      const v = inp.value.replace(/\s/g,'');
+      if(!v) return;
+      if(ch.accept.some(a=>a.replace(/\s/g,'')===v)){ setChallenge(true, '정답이에요! +3점 ✨'); }
+      else { verdict.className='verdict no'; verdict.textContent='아직 아니에요. 단서를 다시 살펴볼까요?'; sfxNo(); }
+    };
+    btn.addEventListener('click', check);
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter') check(); });
+    row.appendChild(inp); row.appendChild(btn);
+    box.appendChild(row);
+  } else if(ch.ui==='intruder'){
+    const chips = h('div','chips');
+    m.cards.filter(c=>c.type==='word').forEach(card=>{
+      const b = h('button','chip', card.hanja+' '+card.reading);
+      if(st.challenge) b.disabled = true;
+      b.addEventListener('click', ()=>{
+        const allFound = gridWords(m).every(w=>st.found.indexOf(w.hanja)>=0);
+        if(!allFound) toast('9개를 먼저 모두 찾으면 더 확실해져요!','info',2400);
+        const right = card.hanja === ch.answerHanja;
+        chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on','right','wrong'));
+        b.classList.add(right?'right':'wrong');
+        if(right){ setChallenge(true,'침입자를 잡았어요! 陪審(배심)은 격자에 없습니다. +3점'); }
+        else { verdict.className='verdict no'; verdict.textContent='이 단어는 격자에 숨어 있어요. 다시 찾아보세요!'; sfxNo(); }
+      });
+      chips.appendChild(b);
+    });
+    box.appendChild(chips);
+  } else if(ch.ui==='idiom'){
+    ch.items.forEach((it, i)=>{
+      const inp = h('input'); inp.type='text'; inp.placeholder=(i+1)+'번째 사자성어 (한자 4글자)';
+      inp.setAttribute('autocomplete','off');
+      inp.style.flex='1 1 100%';
+      if(st.challenge){ inp.value = it.show; inp.disabled=true; }
+      inp.dataset.i = i;
+      row.appendChild(inp);
+    });
+    const btn = h('button','btn primary small','확인');
+    btn.addEventListener('click', ()=>{
+      const inputs = Array.from(row.querySelectorAll('input'));
+      let right = 0;
+      inputs.forEach((inp,i)=>{
+        const v = inp.value.replace(/\s/g,'');
+        const ok = ch.items[i].accept.some(a=>a===v);
+        inp.style.borderColor = ok ? '#6FD0AC' : '#F3B6C6';
+        if(ok) right++;
+      });
+      if(right===inputs.length) setChallenge(true,'숨은 사자성어를 모두 찾았어요! +3점');
+      else { verdict.className='verdict no'; verdict.textContent='틀린 칸을 다시 확인해 보세요. (남은 글자를 위에서부터 → 방향으로!)'; sfxNo(); }
+    });
+    row.appendChild(btn);
+    box.appendChild(row);
+  } else if(ch.ui==='classify'){
+    const chips = h('div','chips');
+    const zones = h('div');
+    const groups = ch.groups;
+    const placed = {problem:[], solution:[]};
+    const mkZone = (key, title)=>{
+      const g = h('div','group-box');
+      g.appendChild(h('h5',null,title));
+      const drop = h('div','drop'); drop.dataset.zone=key;
+      drop.appendChild(h('span','ghost-text','여기에 놓기'));
+      g.appendChild(drop);
+      return g;
+    };
+    const z1 = mkZone('problem','▲ 환경 문제'), z2 = mkZone('solution','● 해결 노력');
+    zones.appendChild(z1); zones.appendChild(z2);
+    let picked = null;
+    gridWords(m).forEach(w=>{
+      const b = h('button','chip', w.hanja+' '+w.reading);
+      if(st.challenge){ b.disabled=true; }
+      b.addEventListener('click', ()=>{
+        if(st.challenge) return;
+        chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on'); picked = b;
+      });
+      chips.appendChild(b);
+    });
+    [['problem',z1],['solution',z2]].forEach(([key, z])=>{
+      const drop = z.querySelector('.drop');
+      drop.addEventListener('click', ()=>{
+        if(!picked || st.challenge) return;
+        const w = picked.dataset.hanja;
+        placed.problem = placed.problem.filter(x=>x!==w);
+        placed.solution = placed.solution.filter(x=>x!==w);
+        placed[key].push(w);
+        drop.innerHTML=''; placed[key].forEach(x=>drop.appendChild(h('span','chip on',x)));
+        refreshGhost();
+        picked.classList.remove('on'); picked=null;
+      });
+    });
+    function refreshGhost(){
+      [z1,z2].forEach(z=>{ const d=z.querySelector('.drop'); if(!d.children.length) d.appendChild(h('span','ghost-text','여기에 놓기')); });
+    }
+    chips.querySelectorAll('.chip').forEach(b=>b.dataset.hanja = b.textContent.split(' ')[0]);
+    const btn = h('button','btn primary small','분류 확인');
+    btn.addEventListener('click', ()=>{
+      const okP = placed.problem.length===groups.problem.length && placed.problem.every(x=>groups.problem.indexOf(x)>=0);
+      const okS = placed.solution.length===groups.solution.length && placed.solution.every(x=>groups.solution.indexOf(x)>=0);
+      if(okP && okS) setChallenge(true,'완벽한 분류예요! +3점');
+      else { verdict.className='verdict no'; verdict.textContent='아직 섞여 있어요. 문제 '+placed.problem.length+'/'+groups.problem.length+' · 해결 '+placed.solution.length+'/'+groups.solution.length; sfxNo(); }
+    });
+    if(st.challenge){
+      z1.querySelector('.drop').innerHTML=''; z2.querySelector('.drop').innerHTML='';
+      groups.problem.forEach(x=>z1.querySelector('.drop').appendChild(h('span','chip right',x)));
+      groups.solution.forEach(x=>z2.querySelector('.drop').appendChild(h('span','chip right',x)));
+    }
+    box.appendChild(chips); box.appendChild(zones);
+    const r2 = h('div','row'); r2.appendChild(btn); box.appendChild(r2);
+  }
+  box.appendChild(verdict);
+  if(st.challenge){
+    verdict.className='verdict ok';
+    verdict.innerHTML = '✅ 도전 문제 완료! '+(ch.reveal || '');
+  }
+}
+function setChallenge(ok, msg){
+  const st = ms(cur.num); st.challenge = true; save();
+  if(ok){ sfxOk(); toast(msg,'ok',2600); }
+  renderChallenge(); drawFound(); updateFound(); renderMap();
+  checkComplete();
+}
+
+/* ---------- board interaction ---------- */
+function bindBoard(){
+  const board = $('#board');
+  board.onpointerdown = onDown;
+  board.onpointermove = onMove;
+  board.onpointerup = onUp;
+  board.onpointercancel = onUp;
+  board.onpointerleave = ()=>{ if(drag) onUp(); };
+}
+function cellAt(x,y){
+  const el = document.elementFromPoint(x,y);
+  return el && el.closest ? el.closest('.cell') : null;
+}
+function cellCenter(r,c){
+  const el = document.querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]');
+  if(!el) return null;
+  const b = el.getBoundingClientRect();
+  return {x:b.left+b.width/2, y:b.top+b.height/2};
+}
+function onDown(e){
+  if(!cur) return;
+  if(cur.num===8 && !timerRunning && ms(8).found.length===0){ startTimer(true); }
+  if(cur.num===8 && !timerRunning && timeLeft<=0) return;
+  const cell = e.target.closest('.cell'); if(!cell) return;
+  drag = {r:+cell.dataset.r, c:+cell.dataset.c};
+  selCells = [[drag.r,drag.c]];
+  paintSel();
+  $('#board').classList.add('dragging');
+  try{ $('#board').setPointerCapture(e.pointerId); }catch(err){}
+  e.preventDefault();
+}
+function onMove(e){
+  if(!drag) return;
+  const cell = cellAt(e.clientX, e.clientY);
+  if(!cell) return;
+  const r = +cell.dataset.r, c = +cell.dataset.c;
+  const cs = lineCells(drag, {r,c});
+  if(!cs) return;
+  selCells = cs; paintSel();
+  e.preventDefault();
+}
+function onUp(e){
+  if(!drag) return;
+  const cells = selCells;
+  drag = null;
+  $('#board').classList.remove('dragging');
+  clearSel();
+  if(!cells || cells.length<2){ return; }
+  const m = cur, st = ms(m.num);
+  const w = wordByCells(m, cells);
+  if(w && st.found.indexOf(w.hanja)<0){
+    st.found.push(w.hanja); save();
+    sfxOk();
+    toast(w.hanja+' ('+w.reading+')'+(w.meaning?' · '+w.meaning:'')+(w.bonus?' ★ 보너스':''), 'ok', 2600);
+    drawFound(); renderClues(); updateFound(); renderMap(); checkComplete();
+    return;
+  }
+  if(w && st.found.indexOf(w.hanja)>=0){ toast('이미 찾은 한자어예요 👍','info',1600); return; }
+  // reversed?
+  const rev = cells.slice().reverse();
+  const wr = wordByCells(m, rev);
+  if(wr){ toast('방향을 확인해 보세요! '+m.allowDirs.join(' ')+' 방향으로 읽어요','warn',2600); sfxNo(); return; }
+  if(cells.length>=2){ sfxNo(); toast('그 글자 조합은 단서와 달라요. 다시 찾아볼까요?','warn',1800); }
+}
+function lineCells(a,b){
+  const dr = b.r-a.r, dc = b.c-a.c;
+  const adr = Math.abs(dr), adc = Math.abs(dc);
+  if(!(adr===0 || adc===0 || adr===adc)) return null;
+  const n = Math.max(adr,adc)+1;
+  if(n<2) return [[a.r,a.c]];
+  const sr = Math.sign(dr), sc = Math.sign(dc);
+  return Array.from({length:n},(_,i)=>[a.r+sr*i, a.c+sc*i]);
+}
+function paintSel(){
+  clearSel();
+  selCells.forEach(([r,c])=>{
+    const el = document.querySelector('.cell[data-r="'+r+'"][data-c="'+c+'"]');
+    if(el) el.classList.add('sel');
+  });
+  const ov = $('#overlay');
+  const NS='http://www.w3.org/2000/svg';
+  const old = ov.querySelector('.temp'); if(old) old.remove();
+  const a = selCells[0], b = selCells[selCells.length-1];
+  const line = document.createElementNS(NS,'line');
+  line.setAttribute('class','temp');
+  line.setAttribute('x1',a[1]+0.5); line.setAttribute('y1',a[0]+0.5);
+  line.setAttribute('x2',b[1]+0.5); line.setAttribute('y2',b[0]+0.5);
+  line.setAttribute('stroke','#F1C948'); line.setAttribute('stroke-width',0.72);
+  line.setAttribute('stroke-linecap','round'); line.setAttribute('opacity','0.5');
+  ov.appendChild(line);
+}
+function clearSel(){
+  $$('.cell.sel').forEach(el=>el.classList.remove('sel'));
+  const ov = $('#overlay'); const t = ov.querySelector('.temp'); if(t) t.remove();
+}
+function updateFound(){
+  const st = ms(cur.num);
+  $('#m-found').textContent = st.found.filter(x=>gridWords(cur).some(w=>w.hanja===x)).length;
+}
+
+/* ---------- hints / reveal / reset ---------- */
+$('#btn-hint').addEventListener('click', ()=>{
+  if(!cur) return;
+  const st = ms(cur.num);
+  const w = gridWords(cur).find(w=>st.found.indexOf(w.hanja)<0);
+  if(!w){ toast('모든 한자어를 찾았어요! 도전 문제만 남았어요 🎉','ok'); return; }
+  const cell = document.querySelector('.cell[data-r="'+w.cells[0][0]+'"][data-c="'+w.cells[0][1]+'"]');
+  if(cell){ cell.classList.add('flash'); setTimeout(()=>cell.classList.remove('flash'),1600); }
+  toast('찾을 한자어의 첫 글자가 여기 있어요! (반짝반짝 ✨)','info',2400);
+  tone(880,0.1,'sine',0.04);
+});
+$('#btn-reveal').addEventListener('click', ()=>{
+  if(!cur) return;
+  const st = ms(cur.num);
+  const words = gridWords(cur);
+  const unfound = words.filter(w=>st.found.indexOf(w.hanja)<0);
+  if(!unfound.length){ toast('이미 모두 찾았어요 👍','info'); return; }
+  modal({
+    title:'👁 정답을 볼까요?',
+    body:'남은 <b>'+unfound.length+'개</b> 한자어를 격자에 표시합니다. 정답을 본 사건은 <b>「확인」</b> 도장으로 남아요.',
+    actions:[{label:'취소',cls:'ghost'},{label:'정답 보기',cls:'primary',onClick:()=>{
+      unfound.forEach(w=>st.found.push(w.hanja));
+      st.revealed = true; save();
+      drawFound(); renderClues(); updateFound(); renderMap(); closeModal();
+      toast('남은 정답을 표시했어요. 격자에서 확인해 보세요!','info',2600);
+      checkComplete(true);
+    }}]
+  });
+});
+$('#btn-reset').addEventListener('click', ()=>{
+  if(!cur) return;
+  modal({
+    title:'↺ 이 사건을 초기화할까요?',
+    body:'찾은 기록과 도전 문제 풀이가 지워집니다.',
+    actions:[{label:'취소',cls:'ghost'},{label:'초기화',cls:'primary',onClick:()=>{
+      state.missions[cur.num] = {found:[], revealed:false, challenge:false, time:null};
+      save(); closeModal(); renderMission(); renderMap(); toast('사건을 처음부터 다시 시작합니다','info');
+    }}]
+  });
+});
+$('#btn-back').addEventListener('click', ()=>{
+  stopTimer();
+  show('screen-map'); renderMap();
+});
+$('#btn-start').addEventListener('click', ()=>{ startTimer(true); });
+
+/* ---------- timer (mission 08) ---------- */
+function setupTimer(){
+  stopTimer();
+  if(cur.num!==8) return;
+  const st = ms(8);
+  timeLeft = st.time!=null ? st.time : 180;
+  if(st.found.length>0 && timeLeft>0 && !st.revealed){ /* 이어하기: 자동 시작하지 않음 */ }
+}
+function startTimer(manual){
+  if(cur.num!==8) return;
+  if(!timeLeft || timeLeft<=0) timeLeft = 180;
+  if(timerRunning) return;
+  timerRunning = true;
+  $('#btn-start').disabled = true;
+  $('#btn-start').textContent = '⏱ '+fmt(timeLeft);
+  const t0 = Date.now(), base = timeLeft;
+  timer = setInterval(()=>{
+    timeLeft = base - Math.floor((Date.now()-t0)/1000);
+    const st = ms(8); st.time = Math.max(0,timeLeft); save();
+    $('#m-timer').textContent = fmt(timeLeft);
+    $('#m-timer').classList.toggle('urgent', timeLeft<=30);
+    $('#btn-start').textContent = '⏱ '+fmt(timeLeft);
+    if(timeLeft<=0){ stopTimer(); timeUp(); }
+  }, 250);
+  if(manual) toast('3분 타임어택 시작! ⏱','info',2000);
+}
+function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } timerRunning=false; }
+function timeUp(){
+  const m=cur, st=ms(8), words=gridWords(m);
+  const found = words.filter(w=>st.found.indexOf(w.hanja)>=0).length;
+  sfxNo();
+  modal({
+    title:'⏰ 시간 종료!',
+    body:'3분이 지났어요. 이번 판에서 <b>'+found+' / '+words.length+'</b>개를 찾았습니다.<br>점수: <b>'+(found*2)+'점</b> (한자어 1개 = 2점)',
+    actions:[{label:'다시 도전',cls:'primary',onClick:()=>{
+      state.missions[8] = {found:[], revealed:false, challenge:false, time:null};
+      save(); closeModal(); renderMission(); renderMap();
+    }},{label:'사건 지도로',cls:'ghost',onClick:()=>{ closeModal(); show('screen-map'); renderMap(); }}]
+  });
+}
+
+/* ---------- completion ---------- */
+function checkComplete(fromReveal){
+  const m = cur, st = ms(m.num), words = gridWords(m);
+  const all = words.every(w=>st.found.indexOf(w.hanja)>=0);
+  if(!all){ 
+    if(!fromReveal && words.length - st.found.length === 0) {}
+    return;
+  }
+  if(!st.challenge){
+    toast('모든 한자어를 찾았어요! 🎉 도전 문제까지 풀면 사건 종결!','info',3000);
+    return;
+  }
+  if(st.done) return;
+  st.done = true; save();
+  sfxWin(); confetti();
+  const score = missionScore(m, st);
+  modal({
+    title:'', body:'', className:'finish', dismissable:true,
+    html:'<div class="big">'+(st.revealed?'🗂️':'🎉')+'</div>'+
+      '<div class="hanja-big">'+(st.revealed?'確認完了':'事件終結')+'</div>'+
+      '<h3>'+(st.revealed?'정답을 확인했어요!':'사건 종결! 수고했어요, 탐정님')+'</h3>'+
+      '<p style="font-size:13px;color:#7A7189;margin:4px 0 0">'+m.numLabel+'. '+m.title+' — '+m.subtitle+'</p>'+
+      '<div class="stats">'+
+        '<div class="stat"><b>'+words.length+'</b>찾은 한자어</div>'+
+        '<div class="stat"><b>+'+score+'</b>이번 사건 점수</div>'+
+        '<div class="stat"><b>'+totalScore()+'</b>누적 점수</div>'+
+      '</div>',
+    actions:[
+      {label:'사건 지도로', cls:'ghost', onClick:()=>{ closeModal(); show('screen-map'); renderMap(); }},
+      nextMission() ? {label:'다음 사건 →', cls:'primary', onClick:()=>{ closeModal(); openMission(nextMission().num); }} : 
+      {label:'모두 종결! 🎉', cls:'primary', onClick:()=>{ closeModal(); show('screen-map'); renderMap(); }}
+    ]
+  });
+  renderMap();
+}
+function isDone(m){ const st=ms(m.num), ws=gridWords(m); return st.found.length>=ws.length && st.challenge; }
+function nextMission(){
+  const i = MISSIONS.indexOf(cur);
+  for(let k=i+1;k<MISSIONS.length;k++){ if(!isDone(MISSIONS[k])) return MISSIONS[k]; }
+  for(let k=0;k<MISSIONS.length;k++){ if(k!==i && !isDone(MISSIONS[k])) return MISSIONS[k]; }
+  return null;
+}
+function totalScore(){
+  return MISSIONS.reduce((s,m)=>s+missionScore(m, ms(m.num)),0);
+}
+function confetti(){
+  const box = h('div','confetti');
+  const emo = ['🎉','✨','🔍','⭐','🎊','💜','🩵','🌷'];
+  for(let i=0;i<26;i++){
+    const s = h('i', null, emo[i%emo.length]);
+    s.style.left = (Math.random()*100)+'vw';
+    s.style.animationDuration = (2.2+Math.random()*1.8)+'s';
+    s.style.animationDelay = (Math.random()*0.7)+'s';
+    s.style.fontSize = (14+Math.random()*16)+'px';
+    box.appendChild(s);
+  }
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(), 5000);
+}
+
+/* ---------- modal ---------- */
+function modal(opts){
+  const back = $('#modal-backdrop'), box = $('#modal');
+  box.className = 'modal '+(opts.className||'');
+  box.innerHTML='';
+  if(opts.html) box.innerHTML = opts.html;
+  else {
+    if(opts.title) box.appendChild(h('h3',null,opts.title));
+    const b = h('div','m-body'); b.innerHTML = opts.body||''; box.appendChild(b);
+  }
+  const acts = h('div','m-actions');
+  (opts.actions||[]).forEach(a=>{
+    const btn = h('button','btn '+(a.cls||'ghost'), a.label);
+    btn.addEventListener('click', ()=>{ if(a.onClick) a.onClick(); else closeModal(); });
+    acts.appendChild(btn);
+  });
+  box.appendChild(acts);
+  back.classList.remove('hidden');
+  back.onclick = e=>{ if(e.target===back && opts.dismissable) closeModal(); };
+}
+function closeModal(){ $('#modal-backdrop').classList.add('hidden'); }
+
+/* ---------- rules / sound ---------- */
+$('#btn-rules').addEventListener('click', ()=>{
+  modal({
+    title:'📜 수사 규칙',
+    body:
+      '<div class="rules-step"><div class="n">1</div><div><h5>미션 단서 확인</h5><p>초성 · 훈음 · 뜻풀이 · 헤드라인 · 깨진 조각 등 미션마다 단서가 다릅니다. 무엇이 주어졌는지 먼저 확인!</p></div></div>'+
+      '<div class="rules-step"><div class="n">2</div><div><h5>격자에서 한자어 찾기</h5><p>한자어는 2~4글자입니다. 격자 위를 드래그해 직선으로 이으면, 맞는 한자어는 캡슐 모양으로 표시되고 음과 뜻이 공개됩니다.</p></div></div>'+
+      '<div class="rules-step"><div class="n">3</div><div><h5>도전 문제 해결</h5><p>침입자, 숨은 사자성어, 반의어 짝꿍, 분류하기까지 풀어야 사건 종결!</p></div></div>'+
+      '<p class="score-rule"><b>읽는 방향</b><br>정방향(굵은 테두리) → ↓ ↘ ↗ : 미션 01~09<br>역방향 ← ↑ ↖ ↙ : 보스(미션 10)만</p>'+
+      '<div class="dir-map"><span>↖</span><span class="bold">↑</span><span>↗</span><span>←</span><span>字</span><span class="bold">→</span><span>↙</span><span class="bold">↓</span><span class="bold">↘</span></div>'+
+      '<p class="score-rule" style="margin-top:10px"><b>모둠 점수 규칙</b><br>한자어 1개 = 1점 (음까지 맞게 쓰면 +1점) · 도전 문제 정답 = 3점 · 가장 먼저 사건 종결 = +2점 (미션 08은 별도 점수제)</p>',
+    actions:[{label:'알겠어요!',cls:'primary'}]
+  });
+});
+$('#btn-sound').addEventListener('click', ()=>{
+  state.sound = !state.sound; save();
+  $('#btn-sound').textContent = state.sound ? '🔔' : '🔕';
+  if(state.sound) tone(660,0.12,'sine',0.05);
+  toast(state.sound?'소리를 켰어요':'소리를 껐어요','info',1400);
+});
+$('#btn-sound').textContent = state.sound ? '🔔' : '🔕';
+
+/* keyboard: Esc closes modal / back to map */
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    if(!$('#modal-backdrop').classList.contains('hidden')) closeModal();
+    else if(cur){ stopTimer(); show('screen-map'); renderMap(); }
+  }
+});
+window.addEventListener('resize', ()=>{ if(cur && !$('#screen-mission').classList.contains('hidden')); });
+
+/* ---------- boot ---------- */
+MISSIONS.forEach(m=>{ ms(m.num); });
+renderMap();
+// restore 시간 표시
+})();
+</script>
+</body>
+</html>
