@@ -558,8 +558,8 @@ function renderMission(){
   $('#btn-start').style.display = m.num===8 ? '' : 'none';
   const startBtn = $('#btn-start');
   if(m.num===8){
-    if(st.found.length===0 && st.time==null){ startBtn.textContent='⏱ 3분 시작'; startBtn.disabled=false; }
-    else if(timerRunning){ startBtn.textContent='⏱ '+fmt(timeLeft); startBtn.disabled=true; }
+    startBtn.style.display = timerRunning ? 'none' : '';
+    if(st.time==null && st.found.length===0){ startBtn.textContent='⏱ 3분 타임어택 시작'; startBtn.disabled=false; }
     else { startBtn.textContent='⏱ 다시 시작'; startBtn.disabled=false; }
     $('#m-timer').classList.remove('hidden');
     $('#m-timer').textContent = fmt(st.time!=null?st.time:180);
@@ -939,15 +939,13 @@ function startTimer(manual){
   if(!timeLeft || timeLeft<=0) timeLeft = 180;
   if(timerRunning) return;
   timerRunning = true;
-  $('#btn-start').disabled = true;
-  $('#btn-start').textContent = '⏱ '+fmt(timeLeft);
+  $('#btn-start').style.display = 'none';
   const t0 = Date.now(), base = timeLeft;
   timer = setInterval(()=>{
     timeLeft = base - Math.floor((Date.now()-t0)/1000);
     const st = ms(8); st.time = Math.max(0,timeLeft); save();
     $('#m-timer').textContent = fmt(timeLeft);
     $('#m-timer').classList.toggle('urgent', timeLeft<=30);
-    $('#btn-start').textContent = '⏱ '+fmt(timeLeft);
     if(timeLeft<=0){ stopTimer(); timeUp(); }
   }, 250);
   if(manual) toast('3분 타임어택 시작! ⏱','info',2000);
